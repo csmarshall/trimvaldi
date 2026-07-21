@@ -8,19 +8,22 @@ DevTools Protocol against a throwaway profile.
 Vivaldi's UI is a web page, so it can be driven programmatically — no clicking:
 
 ```sh
-/Applications/Vivaldi.app/Contents/MacOS/Vivaldi \
-  --remote-debugging-port=9222 --remote-allow-origins='*' --debug-packed-apps \
-  --user-data-dir=/tmp/vivaldi-map --no-first-run --no-default-browser-check &
-
-tools/cdp.py window.html <<'JS'
+./tools/dev-browser.sh              # launch with DevTools on :9222, disposable .dev-profile/
+./tools/cdp.py window.html <<'JS'
 document.querySelector('#browser').className
 JS
+./tools/dev-browser.sh --stop       # quit when done
 ```
 
-`tools/cdp.py` connects to the first DevTools target matching a URL substring and
-evaluates JS in it. The UI target is
-`chrome-extension://mpognobbkildjkofajifpdfhcoklimli/window.html` (`main.html` is a
-second app target).
+`--fresh` wipes the profile first, for a clean-slate map. `tools/cdp.py` connects to
+the first DevTools target matching a URL substring and evaluates JS in it. The UI
+target is `chrome-extension://mpognobbkildjkofajifpdfhcoklimli/window.html`
+(`main.html` is a second app target).
+
+Requires Python `websockets` (`python3 -c 'import websockets'` to check).
+
+**Never hand-patch `Preferences` while Vivaldi is running** — it owns that file and
+rewrites it on exit, silently clobbering the edit. `dev-browser.sh --stop` first.
 
 ## The skeleton
 

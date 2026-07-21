@@ -11,3 +11,6 @@ session-state.md
 # personal, per-user overrides — never committed (each user owns their own)
 css/user-overrides.css
 dist/
+
+# disposable Vivaldi dev profile used by tools/dev-browser.sh
+.dev-profile/
