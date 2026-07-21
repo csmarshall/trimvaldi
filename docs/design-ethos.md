@@ -150,14 +150,26 @@ maintenance burden trimfox does not carry in the same form.
 numbering, but each should cite its trimfox ancestor. The reasoning is inherited;
 the decisions are being made fresh against a different browser.
 
-## What I would want confirmed before writing any CSS
+## Checksum results — 2026-07-21
 
-Ranked by how much rework a wrong answer causes:
+Charles reviewed these and settled the four expensive-to-retrofit ones. All are now
+ADRs; this section records the outcome so the reasoning above stays readable as the
+input it was.
 
-1. **A7** (centralize selectors from day one) — architectural, expensive to retrofit.
-2. **A10** (use `@layer` instead of source order) — architectural, easy now.
-3. **The overlay-vs-push fork** in §2 — defines the signature look.
-4. **A2/A3** (settings recipe as part of the deliverable) — defines project scope.
-5. **A8** (light/dark source of truth) — forces the theme-engine decision.
+| Assumption | Outcome |
+|---|---|
+| **A7** — centralize selectors from day one | **Confirmed.** [ADR-0002](adr/0002-centralize-selectors.md) |
+| **A10** — `@layer` over source order | **Confirmed.** [ADR-0003](adr/0003-cascade-layers-override.md) |
+| **A2/A3** — settings recipe in scope | **Confirmed with a refinement** — scripted `Preferences` patch *gated by levelset tests* against current stable Vivaldi, rather than either documented steps or a blind patch. [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md) |
+| **Overlay vs push** (§2) | **Overlay.** [ADR-0005](adr/0005-hover-expand-overlays.md) |
 
-Everything else can be resolved as the DOM becomes visible.
+The refinement on A2/A3 is worth calling out: it converts the risk I flagged (patching
+a file Vivaldi owns, on unverified key names) into a *tested* dependency surface, and
+extends trimfox's drift-monitoring instinct from the chrome layer to the settings
+layer. That was Charles's addition, not in the original options.
+
+**Still open, deliberately deferred until the DOM is visible:**
+
+- **A8** — light/dark source of truth (`prefers-color-scheme` vs Vivaldi's own theme
+  state). Forces the drive-vs-bypass theme-engine decision. Research Q3.
+- **A1/A4/A12** and the rest — resolvable by inspection once Vivaldi is installed.
