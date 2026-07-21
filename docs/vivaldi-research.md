@@ -109,3 +109,36 @@ rewrites on exit — the basis for
 [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md). **Still OPEN:** the exact
 profile path, the key names trimvaldi needs, and merge-versus-rewrite behaviour on
 upgrade. All of it must be asserted by the levelset tests before any patch writes.
+
+## Q7 — Can settings actually be applied? `OPEN — BLOCKER for ADR-0004`
+
+Two mechanisms tried on 2026-07-21 against 8.1.4087.55; **neither works yet**.
+
+**The `vivaldi.prefs` extension API is access-restricted.** It exists in the UI
+context (`get`, `set`, `onChanged`, `resetAllToDefault`), but most paths return
+*"The pref api is not allowed to access vivaldi.tabs.bar.position"*. Some are
+readable (`vivaldi.homepage`, `vivaldi.tabs.new_page.custom_url`). Not a general
+solution.
+
+**Hand-patching `Preferences` JSON stored the value but had no effect.** With Vivaldi
+fully quit, `vivaldi.tabs.bar.position = "left"` was written, Vivaldi relaunched, and:
+
+- the value **persisted** in the file afterwards (not reverted),
+- the profile has **no `protection` MAC block**, so it is not signature rejection,
+- `"left"` is a **valid value** (the bundle uses `top`/`left`/`right`/`bottom`),
+- but `#browser` still rendered `.tabs-top`.
+
+So the pref is stored and ignored. Candidate explanations, untested: a
+registered-pref **type** mismatch; per-**window** state overriding the global pref;
+or a workspace/session layer taking precedence.
+
+**Note on method:** authoritative pref *names* are greppable from the UI bundle —
+`grep -rhoE '"vivaldi\.[a-z_.]+"' Resources/vivaldi/*.js`. That is how
+`vivaldi.tabs.bar.position` was found after `bar_position` (an invented guess) failed.
+Also note **default-valued prefs are absent from `Preferences` entirely** — they
+appear only once changed, so a levelset test cannot simply assert "key exists"; it
+must treat absent as default.
+
+**Until Q7 is answered, [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md)
+is unproven.** Its levelset gate would have caught this failure, which is the
+argument for the ADR; but the patch half needs a working proof.
