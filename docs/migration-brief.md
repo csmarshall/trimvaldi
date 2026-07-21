@@ -101,7 +101,9 @@ Nothing here is committed to; it is a starting shape to react to.
   cooperate with Vivaldi's light/dark switching and any user theme — but constrains
   us to its model. Bypassing gives full control and closer trimfox fidelity, at the
   cost of fighting the app. Decide during phase 2, with the DOM in front of us.
-- **Scope of parity.** Is trimvaldi meant to be pixel-faithful to trimfox, or
-  "trimfox's philosophy applied natively to Vivaldi"? These diverge fast, because
-  Vivaldi's UI affordances differ. Charles's call.
+- ~~**Scope of parity.**~~ **RESOLVED 2026-07-21: ethos-faithful, not
+  pixel-faithful.** A Vivaldi port carrying trimfox's design ethos. Where trimfox's
+  specific implementation and Vivaldi's grain disagree, the ethos wins and the
+  implementation changes. See [`design-ethos.md`](design-ethos.md) for what that
+  extrapolates to in real work, with numbered assumptions A1–A13.
 - **Name.** "trimvaldi" is the working name and may not survive.
