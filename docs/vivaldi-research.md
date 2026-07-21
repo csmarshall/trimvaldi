@@ -1,74 +1,111 @@
 # Vivaldi research — verification log
 
-**Everything on this page is UNVERIFIED until checked against a real install.**
+**Reference build:** Vivaldi **8.1.4087.55** (arm64 macOS), installed via
+`brew install --cask vivaldi` on 2026-07-21 on `toad`.
 
-Vivaldi is not installed on `toad` as of 2026-07-21, so none of the below has been
-confirmed on this machine. It is recollection and needs checking. Treat each item
-as a question to answer, not a fact to cite — and do not repeat any of it to
-Charles as settled.
+Items are marked `VERIFIED` with evidence, or `OPEN` where still unconfirmed. Do not
+cite an `OPEN` item as fact.
 
-Mark items `VERIFIED <date>` with the evidence as they are confirmed.
+## The single most useful discovery
 
-## Q1 — How are custom UI CSS mods enabled? `UNVERIFIED`
+**Vivaldi ships its entire UI unpacked and readable on disk.** No archive to extract,
+no devtools required for static recon:
 
-Recollection: Vivaldi's UI is `browser.html` rendered in a Chromium view. Two
-approaches have existed over time:
+    /Applications/Vivaldi.app/Contents/Frameworks/Vivaldi Framework.framework/
+      Versions/8.1.4087.55/Resources/vivaldi/
+        window.html          the UI entry point
+        style/common.css     1023K — the entire UI theme
+        components/          per-feature CSS
 
-- **Historic / manual:** hand-edit `browser.html` inside the application bundle to
-  `<link>` a custom stylesheet. Survives poorly — an app update overwrites it.
-- **Supported setting:** newer Vivaldi versions expose a "custom UI modifications"
-  folder in Settings → Appearance, pointed at a directory of `.css` files, with a
-  matching toggle under `vivaldi://experiments`.
+This is a materially better position than trimfox had with Firefox, where chrome CSS
+lives inside `omni.ja` and had to be unzipped to inspect. Here the whole dependency
+surface is greppable directly. Devtools remain necessary for *live DOM* confirmation
+(the CSS may contain legacy or unused selectors), but selector discovery is now a
+`grep`.
 
-**To confirm:** which mechanism the current Vivaldi build uses, the exact settings
-path, the exact flag name, whether it survives updates, and whether a restart is
-needed per change (trimfox's edit-and-restart loop may or may not apply).
+## Q1 — How are custom UI CSS mods injected? `VERIFIED (mechanism) / OPEN (folder)`
 
-## Q2 — What does the tab bar DOM actually look like? `UNVERIFIED`
+`window.html` contains exactly two stylesheet links, in this order:
 
-Recollection of Vivaldi-ish selectors: `#browser`, `#tabs-container`,
-`.tabbar-wrapper`, `.tab-position`, `.tab`, `#header`, `.toolbar`, `#addressfield`,
-`.panel`. **Low confidence — verify every one.**
+```html
+<link rel="stylesheet" href="style/common.css" />
+<link rel="stylesheet" href="chrome://vivaldi-data/css-mods/css" />
+```
 
-**To confirm:** the real element tree for the tab bar in vertical mode, collapsed
-vs expanded, plus pinned tabs and tab stacks.
+**This is decisive for the override architecture.** The mod endpoint is a supported,
+built-in `<link>` — not a hack — and it loads **after** Vivaldi's own stylesheet, in
+the same author origin. Plain source order and ordinary specificity therefore work in
+our favour, exactly as trimfox's CSS competes with Firefox's chrome CSS. This is the
+empirical basis for [ADR-0006](adr/0006-import-order-not-cascade-layers.md).
 
-**How:** Vivaldi's own UI is inspectable with devtools once enabled (the UI is a
-web page). That inspection replaces trimfox's "read Firefox's chrome CSS" step and
-is the single highest-value first action after install.
+**Still OPEN:** where the css-mods folder lives on disk, the settings path that points
+Vivaldi at it, and — important for ADR-0006 — whether the endpoint concatenates
+multiple files and in what order. If order within the folder is not controllable, the
+single-entry-file-plus-`@import` plan is what saves us; confirm `@import` resolves from
+that `chrome://` endpoint.
 
-## Q3 — What theme variables does Vivaldi expose? `UNVERIFIED`
+## Q2 — The UI DOM and its selectors `PARTIALLY VERIFIED`
 
-Recollection: a theme engine with custom properties along the lines of
-`--colorBg`, `--colorFg`, `--colorAccentBg`, `--colorHighlightBg`, `--colorBorder`.
-Names and completeness both unconfirmed.
+Real class names confirmed present in `common.css`:
 
-**To confirm:** the real variable set, whether it covers everything trimvaldi needs
-to recolour, and how it reacts to light/dark and to user-selected themes. Drives
-the "drive vs bypass the theme engine" decision in the migration brief.
+    .tab  .tab-group  .tab-count  .tab-header  .tab-mini  .tab-indicator
+    .tab-audio  .tab-captured  .tab-dropzone  .tab-first-in-group  .tab-accordion
 
-## Q4 — Native vertical tabs and hover-expand `UNVERIFIED (feature exists; behaviour unconfirmed)`
+Note these are **Vivaldi's actual names**, and they bear no resemblance to Firefox's
+(`.tabbrowser-tab`, `#urlbar`, `.urlbarView-row`) — the zero-shared-selectors premise
+of [ADR-0001](adr/0001-ethos-faithful-port.md) is now confirmed rather than assumed.
 
-Vivaldi ships vertical tabs (tab bar left/right) and tab stacking — this much is
-well established. What is unconfirmed is whether it offers a **collapse /
-expand-on-hover** strip like the one trimfox builds, natively or via a setting.
+**Still OPEN:** which of these appear in the live DOM versus being legacy, the full
+tree for vertical-tab mode, and the address bar / panel structure. Requires devtools
+against a running window.
 
-**To confirm:** if native, trimvaldi styles it and phase 4 shrinks to almost
-nothing. If not, we build hover-expand in CSS (Chromium CSS makes this more
-tractable than it was in Firefox).
+## Q3 — Vivaldi's theme variables `VERIFIED (they exist) / OPEN (coverage)`
 
-## Q5 — Does `oklch()` work in Vivaldi's UI layer? `UNVERIFIED (very likely yes)`
+A substantial custom-property theme system, e.g.:
 
-Chromium has supported `oklch()` since 111, and Vivaldi tracks Chromium closely,
-so the parametric palette should carry over. Confirm anyway — the UI layer can lag
-or restrict what page content gets.
+    --colorBg          --colorFg          --colorAccentBg     --colorAccentFg
+    --colorBgDark      --colorBgAlpha     --colorAccentBgFaded  --colorAccentBorder
+    (plus Alpha / Faded / Dark / Darker / Heavy variants throughout)
 
-## Q6 — Install / distribution story `UNVERIFIED`
+**Still OPEN:** whether these cover everything trimvaldi needs to recolour, and
+therefore whether we drive Vivaldi's theme engine or bypass it. That decision remains
+open, but Q4 below now pushes it.
 
-trimfox ships `install.sh` + a release zip that drops files into a Firefox profile.
-The Vivaldi equivalent depends entirely on Q1.
+## Q4 — Light/dark switching `VERIFIED — and it resolves assumption A8`
 
-**To confirm:** where the CSS folder lives per-user, whether it is profile-scoped,
-and what a one-command install would look like. Also whether mods survive Vivaldi
-updates — if they do not, that is a prominent README warning, the way trimfox warns
-about Firefox updates.
+`common.css` contains **zero** occurrences of `prefers-color-scheme`. Light and dark
+are driven by Vivaldi's own theme classes:
+
+    .theme-dark   .theme-light   .theme-schedule
+
+**A8 is confirmed: trimfox's `@media (prefers-color-scheme: …)` approach will not
+track Vivaldi's theme.** A user's Vivaldi theme (including its scheduled switching,
+hence `.theme-schedule`) is independent of the OS appearance that
+`prefers-color-scheme` reports.
+
+**Consequence:** the palette's light/dark split must key off `.theme-dark` /
+`.theme-light` rather than the media query. This is a small, contained change to the
+one file that ports most cleanly (`grayscale.css`) — its *values* still port verbatim,
+only the switching wrapper changes. It also pushes the Q3 decision toward
+**cooperating with** Vivaldi's theme system rather than bypassing it.
+
+## Q5 — Does `oklch()` work in Vivaldi's UI layer? `OPEN (likely yes)`
+
+Vivaldi's own UI CSS uses `oklch()` **zero** times, so its absence proves nothing
+either way — it only tells us Vivaldi does not rely on it. Chromium has supported
+`oklch()` since 111 and Vivaldi 8.1 tracks a far newer Chromium, so the parametric
+`tinted` palette should carry over. **Confirm by testing in the UI layer specifically**
+before depending on it; the UI is a privileged `chrome://` context and need not behave
+identically to page content.
+
+## Q6 — Install / distribution and update survival `OPEN`
+
+The CSS mods folder is user-chosen and lives outside the app bundle, which suggests
+mods are **not** clobbered by application updates the way a patched `browser.html`
+would be. Unconfirmed.
+
+Vivaldi's settings live in a profile `Preferences` JSON that the application owns and
+rewrites on exit — the basis for
+[ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md). **Still OPEN:** the exact
+profile path, the key names trimvaldi needs, and merge-versus-rewrite behaviour on
+upgrade. All of it must be asserted by the levelset tests before any patch writes.

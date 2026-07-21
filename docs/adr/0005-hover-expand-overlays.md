@@ -39,9 +39,19 @@ better on this browser. Nothing moves that the user did not ask to move.
   sizing does.
 - **Trade-off:** visibly different from trimfox for anyone running both. Expected and
   intended under ADR-0001, but it belongs in the README rather than being discovered.
-- **Trade-off:** an overlay covers content, so the strip needs enough contrast and
-  likely a shadow or edge to read as floating rather than as part of the page — new
-  visual work the pushing version did not require, and it must hold on both the
-  grayscale and tinted palettes.
+- **Resolved (2026-07-21) — the overlay affordance costs no new visual vocabulary.**
+  An overlay must read as floating rather than as part of the page, which initially
+  looked like new visual work. It is not. Two existing tokens cover it:
+  **opaque `--tf-surface`** for the expanded strip (so page content never shows
+  through or collides with labels) plus a **hairline trailing edge in
+  `--tf-line-solid`**. trimfox's structural language is *already lines* — tab
+  separators are its defining visual device — so an edge line is native to the design
+  rather than imported into it. Both tokens already flip correctly across the
+  grayscale and tinted palettes and across light/dark, so nothing new must be tuned.
+  **Explicitly rejected:** a drop shadow (adds visual weight, cuts against
+  *quiet/get-out-of-the-way*, and introduces a vocabulary trimfox does not use) and
+  `backdrop-filter` blur (now genuinely viable on Chromium over page content, unlike
+  the Firefox case that killed `--tf-menu-blur` — but it is weight and GPU cost for an
+  effect the ethos does not ask for).
 - **Trade-off:** if Vivaldi's native vertical tabs push and cannot be made to overlay,
   this decision may cost real effort or force a revisit. Unverified — Q4.

@@ -1,7 +1,14 @@
 # ADR-0003 — Enforce the override contract with CSS cascade layers
 
-- **Status:** Accepted
+- **Status:** ⚠️ **SUPERSEDED by [ADR-0006](0006-import-order-not-cascade-layers.md)** (2026-07-21, same day)
 - **Date:** 2026-07-21
+
+> **Do not implement this.** The reasoning below is sound but rests on a premise that
+> turned out to be false. Vivaldi's UI stylesheet is entirely **unlayered** author CSS
+> (verified: `style/common.css`, 1023K, zero `@layer` in 8.1.4087.55), and unlayered
+> normal declarations beat *all* layered ones within an origin — so a layered trimvaldi
+> would lose every conflict with Vivaldi's own defaults, regardless of specificity.
+> Kept as a record so the option is not re-proposed. See ADR-0006.
 - **Ancestor:** trimfox [ADR-0006 — `user-overrides` layer](https://github.com/csmarshall/trimfox/blob/main/docs/adr/0006-user-overrides-layer.md)
 
 ## Context
