@@ -24,19 +24,25 @@ import sys
 # Source: ~/work/trimfox/chrome/palettes/grayscale.css — values verbatim.
 PALETTES = {
     "dark": {
-        # DELIBERATE DEVIATION from trimfox, which uses #202020 for --tf-surface.
-        # Vivaldi derives its whole dark ramp by offsetting DOWN from colorBg, and
-        # assumes roughly Vivaldi2's headroom (#363536 = 54/255). At 32/255 the
-        # bottom rung clipped to pure #000000 and --colorBgIntense collapsed to
-        # #0c0c0c. Lifting to 42/255 restores the headroom while staying exactly
-        # neutral — Vivaldi's own base is NOT neutral (#363536, and colorFg
-        # #d3d9e3 is openly blue), so we take its luminance, never its cast.
+        # DELIBERATE DEVIATION from trimfox: the whole dark ramp is lifted
+        # UNIFORMLY by +10 (0x0a). Vivaldi derives its ramp by offsetting DOWN
+        # from colorBg and assumes roughly Vivaldi2's headroom (#363536 = 54/255);
+        # at trimfox's 32/255 the bottom rung clipped to pure #000000.
+        #
+        # Lifted uniformly rather than just moving colorBg, so trimfox's GAPS are
+        # preserved (10/4/14/39) — those gaps are the design, the absolute values
+        # are not, and squeezing surface↔raised from 14 to 4 would have flattened
+        # exactly the contrast that makes hover states legible.
+        #
+        # Vivaldi's own base is NOT neutral (#363536 has G low, and colorFg
+        # #d3d9e3 is openly blue), so we take its luminance and never its cast.
         # ADR-0001: ethos wins, implementation changes.
-        "colorBg":          "#2a2a2a",   # --tf-surface, lifted from trimfox's #202020
+        "colorBg":          "#2a2a2a",   # --tf-surface  (trimfox #202020)
         "colorFg":          "#ffffff",   # --tf-text
-        "colorAccentBg":    "#707070",   # --tf-accent
-        "colorHighlightBg": "#555555",   # --tf-select  (replaces Vivaldi's #7aa0ff)
-        "colorWindowBg":    "#1c1c1c",   # --tf-content
+        "colorAccentBg":    "#707070",   # --tf-accent — shared with light on purpose,
+                                         #   a neutral gray reads on both
+        "colorHighlightBg": "#5f5f5f",   # --tf-select   (trimfox #555555; replaces #7aa0ff)
+        "colorWindowBg":    "#262626",   # --tf-content  (trimfox #1c1c1c)
     },
     "light": {
         "colorBg":          "#ececec",

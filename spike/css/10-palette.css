@@ -8,16 +8,22 @@
    common.css contains zero prefers-color-scheme). Confirms assumption A8. */
 
 /* ── DARK (default) ────────────────────────────────────────────────────────── */
+/* ⚠️ The DARK ramp is trimfox's, lifted UNIFORMLY BY +10 (0x0a) on every rung.
+   Why lifted at all: Vivaldi derives its ramp by offsetting DOWN from colorBg and
+   assumes roughly its own base's headroom (#363536 = 54/255). At trimfox's #202020
+   (32/255) the bottom rung clipped to pure #000000.
+   Why uniformly: lifting only --tf-surface would have squeezed surface↔raised from
+   14 to 4, flattening the contrast that makes hover and selection states legible.
+   trimfox's GAPS are the design; its absolute values are not. Gaps preserved
+   exactly: 10 / 4 / 14 / 39.
+   The LIGHT ramp below is untouched — Vivaldi's light base (#f5f5f5) is brighter
+   than trimfox's #ececec, so the headroom already ran the safe direction there. */
 #browser.theme-dark {
-  --tf-field:    #121212;
-  --tf-content:  #1c1c1c;
-  /* Lifted from trimfox's #202020 — see the long note in spike/theme-patch.py.
-     Kept in sync with the theme's colorBg seed by hand; in the real theme these
-     must have ONE source of truth, because a silent disagreement between the
-     CSS layer and the theme layer would be very hard to spot. */
-  --tf-surface:  #2a2a2a;
-  --tf-raised:   #2e2e2e;
-  --tf-select:   #555555;
+  --tf-field:    #1c1c1c;   /* trimfox #121212 */
+  --tf-content:  #262626;   /* trimfox #1c1c1c */
+  --tf-surface:  #2a2a2a;   /* trimfox #202020 — kept in sync with the theme colorBg seed */
+  --tf-raised:   #383838;   /* trimfox #2e2e2e */
+  --tf-select:   #5f5f5f;   /* trimfox #555555 */
 
   --tf-accent:        #707070;
   --tf-accent-hover:  #808080;
@@ -26,10 +32,17 @@
   --tf-text:     #ffffff;
   --tf-text-dim: #aaaaaa;
 
+  /* --tf-line-solid* are DERIVED, not chosen: the opaque form of --tf-line
+     composited over --tf-surface, so a separator reads the same colour over the
+     active-tab highlight as over an inactive tab. Recomputed for the lifted
+     surface — surface + alpha × (255 − surface):
+         0.18 over #2a2a2a → #505050      (trimfox: 0.18 over #202020 → #484848 ✓)
+         0.06 over #2a2a2a → #373737      (trimfox: 0.06 over #202020 → #2d2d2d ✓)
+     The formula was checked against trimfox's published values before use. */
   --tf-line:                rgba(255, 255, 255, 0.18);
   --tf-line-inactive:       rgba(255, 255, 255, 0.06);
-  --tf-line-solid:          #484848;
-  --tf-line-solid-inactive: #2d2d2d;
+  --tf-line-solid:          #505050;   /* trimfox #484848 */
+  --tf-line-solid-inactive: #373737;   /* trimfox #2d2d2d */
   --tf-highlight:           rgba(255, 255, 255, 0.10);
   --tf-highlight-inactive:  rgba(255, 255, 255, 0.05);
 
