@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# session / working state (never committed)
+session-state.md
+
+# backups left in a profile, and logs
+*.bak-*
+*.log
+
+# personal, per-user overrides — never committed (each user owns their own)
+css/user-overrides.css
+dist/
