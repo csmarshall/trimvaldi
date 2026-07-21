@@ -55,8 +55,8 @@ Vivaldi's Speed Dial is the analogue of Firefox's activity-stream new tab, and
 |---|---|
 | No bookmarks toolbar (`browser.toolbars.bookmarks.visibility="never"`) | ✅ state class `.bookmark-bar-top-off` on `#browser`; pref under `vivaldi.bookmarks.*` ❓ |
 | Compact density (`browser.uidensity=1`) | ✅ state class `.density-on`; pref ❓ |
-| Vertical tab strip (`sidebar.verticalTabs`) | ✅ `vivaldi.tabs.bar.position` — values `top`/`left`/`right`/`bottom` |
-| Status bar — trimfox has none to hide | Vivaldi adds one: `#footer .toolbar-statusbar`. Native setting ❓ |
+| Vertical tab strip (`sidebar.verticalTabs`) | ✅ `vivaldi.tabs.bar.position` — **enum, write the INT**: `top`0 `left`1 `right`2 `bottom`3 |
+| Status bar — trimfox has none to hide | ✅ `vivaldi.status_bar.display` — enum `on`0 / `off`1 / `overlay`2. Write `1`. |
 | No tab hover previews (`browser.tabs.hoverPreview.enabled=false`) | ❓ likely under `vivaldi.tabs.*` |
 | Closing last tab keeps window (`browser.tabs.closeWindowWithLastTab=false`) | ❓ |
 
@@ -74,7 +74,28 @@ Same intent, different names: strip predictive/suggestion clutter from the dropd
 
 Not a port — new decisions, because Vivaldi ships UI Firefox has no equivalent of:
 
-- **Panels rail** (`#main.left`) — trimfox has no analogue. Trim or keep?
+- **Panels rail** (`#main.left`) — trimfox has no analogue. **DECIDED: trim it.**
+  Charles's reasoning, and it is the right test to apply: everything the rail exposes
+  is reachable by keyboard shortcut or menu, so a permanently-visible column of icons
+  is not earning its space for ~all interactions.
+
+  **Crucially, the rail and the panels are separate flags**, so trimming the rail does
+  *not* remove the capability — the trimfox move of deleting the persistent affordance
+  while keeping the function:
+
+      vivaldi.panels.state           {"barVisible": …, "panelVisible": …, "width": 34}
+      vivaldi.panels.window_defaults same shape — the defaults for NEW windows.
+                                     Set both, or new windows get the rail back.
+
+  Related and worth taking while we are here: `vivaldi.panels.as_overlay.enabled`
+  (bool, default `false`) makes panels overlay content instead of pushing it —
+  natively, exactly the behaviour [ADR-0005](adr/0005-hover-expand-overlays.md)
+  argues for on the tab strip.
+
+  ⚠️ **One genuine exception to "it's all in a menu": web panels** — docked websites
+  (`vivaldi.panels.web.items`), where the docked surface *is* the feature. They remain
+  reachable via Quick Commands with the rail hidden, so this is a trim, not a removal;
+  worth a line in the README's "Heads up" section rather than a silent deletion.
 - **Workspaces button** in the tab bar (`.tabbar-workspace-button`).
 - **`.color-accent-from-page`** — Vivaldi tints its chrome from the page's theme
   colour. This is **directly hostile to the zero-blue grayscale ethos** and should

@@ -4,9 +4,29 @@ A Vivaldi UI theme carrying over the design language of
 [trimfox](https://github.com/csmarshall/trimfox) — grayscale, zero-blue, and
 trimmed down to the tabs.
 
-> **Status: pre-implementation.** Nothing is built yet. This repo currently holds
-> the migration brief and a research log. It is public early so the work is legible,
-> not because it is usable — there is no theme to install.
+> **Status: feasibility proven, theme not built.** There is still nothing to install.
+> What exists is a throwaway proof that the approach works, plus the research and
+> decisions behind it. Public early so the work is legible, not because it is usable.
+
+What the feasibility spike established against Vivaldi 8.1.4087.55 on macOS:
+
+- **Setup needs zero manual steps in Settings.** Registering the CSS folder, the
+  vertical tab strip, and the whole palette are all pref writes to a closed profile.
+  Measured end to end, with controls — not estimated.
+- **The signature interaction works** — a collapsed tab rail that expands on hover
+  and *overlays* the page rather than reflowing it.
+- **The palette is a Vivaldi theme, not a stylesheet.** Vivaldi derives ~117 chrome
+  variables from about five seed colours, so trimfox's grayscale ports as a native
+  theme. Its light/dark values carried over unchanged.
+
+Honest limits, since they matter more than the wins:
+
+- **Whether UI mods survive a Vivaldi update is unverified.** Mods live in the user
+  profile rather than the app bundle, which suggests they should, but we have not
+  observed an actual update against a modded profile. Treat it as untested.
+- A little `!important` is unavoidable, because Vivaldi sets some values as inline
+  styles. It does not affect your ability to override — see below.
+- Everything above was measured against **one build on one platform**.
 
 ## What this will be
 
@@ -35,13 +55,20 @@ trimming and the palette rather than the tab strip itself.
 ## Planned
 
 - Grayscale-by-default palette, with the parametric OKLCH tinting from trimfox
+  (`oklch()` is confirmed working in Vivaldi's UI layer)
 - The trim pass — strip the chrome to the trimfox silhouette
 - Hover-expand tab strip styling on Vivaldi's native vertical tabs
 - A `user-overrides.css` layer so you can customize without forking
+- A scripted installer, so setup stays a single command
 
-See [`docs/migration-brief.md`](docs/migration-brief.md) for the full plan and
-[`docs/vivaldi-research.md`](docs/vivaldi-research.md) for what still needs
-verifying against a real Vivaldi install.
+You will still customize by redefining `--tf-*` tokens in your own
+`user-overrides.css`, exactly as in trimfox, and you will never need `!important`
+to override trimvaldi or need to run any build step to do it.
+
+See [`docs/migration-brief.md`](docs/migration-brief.md) for the plan,
+[`docs/adr/`](docs/adr/) for the decisions and why, and
+[`docs/vivaldi-research.md`](docs/vivaldi-research.md) for what is verified versus
+still open — the distinction is marked per item, deliberately.
 
 ## Related
 
