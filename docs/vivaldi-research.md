@@ -139,6 +139,54 @@ Also note **default-valued prefs are absent from `Preferences` entirely** — th
 appear only once changed, so a levelset test cannot simply assert "key exists"; it
 must treat absent as default.
 
-**Until Q7 is answered, [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md)
-is unproven.** Its levelset gate would have caught this failure, which is the
-argument for the ADR; but the patch half needs a working proof.
+### Q7 UPDATE (2026-07-21, web research) — the mechanism is NOT broken
+
+**Editing `Preferences` JSON demonstrably works.** Two independent projects do it:
+
+- **[vivaldi-peek](https://github.com/xpltdco/vivaldi-peek)** — auto-collapsing vertical
+  tabs, one-command install. Its installer **fully scripts the CSS-mod setup with no GUI
+  steps**: backs up Preferences, sets `vivaldi.features.css_mods = true`, and sets
+  `vivaldi.appearance.css_ui_mods_directory` to its CSS folder.
+- **[vivaldi-customizations](https://github.com/kurtlieber/vivaldi-customizations)** — a
+  `jq`-based script syncing toolbar/panel prefs under the `.vivaldi` key between profiles.
+
+Both stress the same constraint we already found: **Vivaldi must be closed**, or it
+overwrites the edit.
+
+So the failure was specific to `vivaldi.tabs.bar.position`, not to the approach.
+Suggestively, **vivaldi-peek does not script tab-bar position either** — it tells users
+to set vertical tabs manually first. That hints this particular pref is governed by
+something else (per-window state, or a companion key).
+
+**Verified against 8.1.4087.55 locally:**
+
+    vivaldi.appearance.css_ui_mods_directory   ✅ present in the UI bundle
+    vivaldi.features.css_mods                  ❓ NOT in the UI bundle — likely a
+                                                  browser-side flag; confirm by toggling
+                                                  the experiment and diffing Preferences
+
+**Revised read: [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md) is
+plausible after all** — the patch half has working precedent. The open question shrinks
+from "can settings be applied?" to "which specific prefs resist it?"
+
+## Q8 — Is the trimfox look achievable in Vivaldi at all? `VERIFIED — yes, well-trodden`
+
+The signature interaction — a collapsed vertical tab strip that expands on hover — is a
+**common, solved Vivaldi mod** with multiple independent implementations:
+[vivaldi-peek](https://github.com/xpltdco/vivaldi-peek),
+[Achyuth072/Vivaldi-CSS](https://github.com/Achyuth072/Vivaldi-CSS), and a
+[long-running forum thread](https://forum.vivaldi.net/topic/82900/vertical-tabs-collapsed-expand-on-hover).
+
+Community selector pattern:
+
+    #tabs-tabbar-container:is(.left, .right):not(:has(#tabs-subcontainer)):not(:hover)
+
+This confirms `.left`/`.right` as the vertical state classes on `#tabs-tabbar-container`
+(we observed `.top`), and `#tabs-tabbar-container` appears 288× in `common.css`.
+
+**Update survival (Q6) effectively answered:** these mods live in the Vivaldi *User Data*
+directory, never the application folder, so Vivaldi updates do not touch them.
+
+**GUI enablement path** (if not scripted): `vivaldi://experiments` → "Allow for using CSS
+modifications", then Settings → Appearance → Custom UI Modifications → select folder,
+then restart.
