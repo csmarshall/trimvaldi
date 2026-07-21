@@ -1,0 +1,8 @@
+/* SPIKE — throwaway. First file alphabetically.
+   Exists to answer research Q1's open half: does the css-mods endpoint
+   concatenate every .css in the folder, and in what order? Both files set the
+   same token; whichever wins tells us the order. */
+#browser {
+  --tf-spike-loaded: yes;
+  --tf-spike-order: alpha;
+}

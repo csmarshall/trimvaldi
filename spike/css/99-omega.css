@@ -1,0 +1,14 @@
+/* SPIKE — throwaway. Last file alphabetically.
+
+   Its ONLY job now is to prove load order: it sets the same token as
+   00-alpha.css, and if the computed value is `omega` then the css-mods endpoint
+   imported files alphabetically and later files win. Verified: it does.
+
+   The garish debug paint that used to live here has done its job and been
+   removed — see git history if you want it back. What it proved:
+     - a bare #tabs-tabbar-container rule SILENTLY LOSES to Vivaldi's
+       #browser:not(.transparent-tabbar) #tabs-tabbar-container   (1,0,0) vs (2,1,0)
+     - setting --colorTabBar, or matching specificity, both work with no !important */
+#browser {
+  --tf-spike-order: omega;
+}

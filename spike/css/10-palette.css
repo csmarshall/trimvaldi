@@ -1,0 +1,72 @@
+/* SPIKE — throwaway. trimfox's grayscale palette, ported.
+   Source: ~/work/trimfox/chrome/palettes/grayscale.css
+
+   The VALUES are copied verbatim — that file is plain hex/rgba with zero Firefox
+   specifics, and it ported without a single change. Only the switching wrapper
+   differs: trimfox keys off @media (prefers-color-scheme), which does NOT track
+   Vivaldi's theme (Vivaldi uses .theme-dark/.theme-light on #browser, and
+   common.css contains zero prefers-color-scheme). Confirms assumption A8. */
+
+/* ── DARK (default) ────────────────────────────────────────────────────────── */
+#browser.theme-dark {
+  --tf-field:    #121212;
+  --tf-content:  #1c1c1c;
+  /* Lifted from trimfox's #202020 — see the long note in spike/theme-patch.py.
+     Kept in sync with the theme's colorBg seed by hand; in the real theme these
+     must have ONE source of truth, because a silent disagreement between the
+     CSS layer and the theme layer would be very hard to spot. */
+  --tf-surface:  #2a2a2a;
+  --tf-raised:   #2e2e2e;
+  --tf-select:   #555555;
+
+  --tf-accent:        #707070;
+  --tf-accent-hover:  #808080;
+  --tf-accent-active: #606060;
+
+  --tf-text:     #ffffff;
+  --tf-text-dim: #aaaaaa;
+
+  --tf-line:                rgba(255, 255, 255, 0.18);
+  --tf-line-inactive:       rgba(255, 255, 255, 0.06);
+  --tf-line-solid:          #484848;
+  --tf-line-solid-inactive: #2d2d2d;
+  --tf-highlight:           rgba(255, 255, 255, 0.10);
+  --tf-highlight-inactive:  rgba(255, 255, 255, 0.05);
+
+  --tf-glyph:     #d4d4d4;
+  --tf-attention: var(--tf-glyph);
+}
+
+/* ── LIGHT — the grayscale ramp INVERTED ───────────────────────────────────── */
+#browser.theme-light {
+  --tf-field:    #ffffff;
+  --tf-content:  #f7f7f7;
+  --tf-surface:  #ececec;
+  --tf-raised:   #dcdcdc;
+  --tf-select:   #b8b8b8;
+
+  --tf-accent:        #707070;
+  --tf-accent-hover:  #808080;
+  --tf-accent-active: #606060;
+
+  --tf-text:     #111111;
+  --tf-text-dim: #666666;
+
+  --tf-line:                rgba(0, 0, 0, 0.18);
+  --tf-line-inactive:       rgba(0, 0, 0, 0.06);
+  --tf-line-solid:          #c4c4c4;
+  --tf-line-solid-inactive: #dadada;
+  --tf-highlight:           rgba(0, 0, 0, 0.10);
+  --tf-highlight-inactive:  rgba(0, 0, 0, 0.05);
+
+  --tf-glyph:     #333333;
+  --tf-attention: var(--tf-glyph);
+}
+
+/* Q5 probe — oklch() in the privileged UI context. Verified working on
+   8.1.4087.55: CSS.supports() true, computed value preserved, and
+   color-mix(in oklch, …) resolves. So trimfox's parametric `tinted` palette
+   can port too, not just `grayscale`. */
+#browser {
+  --tf-oklch-probe: oklch(0.62 0.19 29);
+}

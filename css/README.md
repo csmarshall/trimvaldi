@@ -16,7 +16,20 @@ Load order is the whole contract: dials → palette → theme → user overrides
 redefining a token in `user-overrides.css` gets exactly the behaviour of having
 changed the default, and `git pull` never conflicts with their colours.
 
-**Unresolved:** how Vivaldi actually loads a folder of CSS, and therefore whether
-load order is controllable by filename or needs a single entry file with `@import`.
-That is Q1 in [`../docs/vivaldi-research.md`](../docs/vivaldi-research.md) and must
-be answered before this structure is locked in.
+**✅ RESOLVED 2026-07-21** (was: "how does Vivaldi load a folder of CSS?").
+
+`chrome://vivaldi-data/css-mods/css` generates one `@import` per `.css` in the folder,
+**in alphabetical order**. So load order is controllable **both** ways — numeric
+filename prefixes *or* a single entry file that `@import`s the rest. `@import` does
+resolve from that endpoint. See [`../docs/vivaldi-research.md`](../docs/vivaldi-research.md)
+Q1 and [`../docs/adr/0006-import-order-not-cascade-layers.md`](../docs/adr/0006-import-order-not-cascade-layers.md).
+
+The structure above can be locked in. Two amendments the spike forced:
+
+- **The palette is NOT a stylesheet.** Vivaldi's theme engine writes ~117 `--color*`
+  properties as an inline `style` on `#browser`, so CSS cannot override them without
+  `!important` on every one. Instead the palette installs as a **native Vivaldi theme**
+  via prefs, derived from ~5 seed colours. `palettes/*.css` becomes the `--tf-*` token
+  definitions plus a generator input for that theme — not the recolouring mechanism.
+- **Prefix files numerically** (`00-`, `10-`, …) so alphabetical order *is* the
+  intended cascade order, and `user-overrides.css` sorts last on its own.

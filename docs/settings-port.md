@@ -7,9 +7,22 @@ Vivaldi's pref namespace.
 Pref paths marked ✅ were read out of Vivaldi 8.1.4087.55's own UI bundle
 (authoritative names) or confirmed live. Ones marked ❓ still need locating.
 
-> **Blocked on a mechanism problem.** See the warning at the bottom — we do not yet
-> have a working way to *apply* these. The mapping is still worth having; applying it
-> is [ADR-0004](adr/0004-settings-recipe-with-levelset-tests.md)'s open problem.
+> **✅ UNBLOCKED 2026-07-21.** The earlier "we have no working way to apply these"
+> warning was **wrong** and has been replaced at the bottom of this file. Prefs are
+> fully scriptable; the failure was a single type error. See
+> [`vivaldi-research.md`](vivaldi-research.md) Q7 and [`../spike/`](../spike/).
+
+## Read `prefs_definitions.json` before writing ANY pref
+
+    Resources/vivaldi/prefs_definitions.json
+
+618 prefs with **names, types and defaults** — authoritative, straight from the build.
+Use it instead of guessing, and instead of grepping the JS bundle for names alone.
+
+**Types matter more than names.** `enum` prefs are stored as **integers**, not their
+string labels — writing the label persists silently and is then ignored, which cost a
+whole session. And **default-valued prefs are absent from `Preferences` entirely**, so
+a levelset test must treat *absent* as *default*, never as *missing*.
 
 ## Three categories
 
@@ -68,22 +81,34 @@ Not a port — new decisions, because Vivaldi ships UI Firefox has no equivalent
   almost certainly be switched off. Highest-value single setting for the look.
 - **Tab stacking** — trimfox never had it.
 
-## ⚠️ Mechanism is unresolved — do not assume this can be applied yet
+## ✅ Mechanism RESOLVED — patching `Preferences` works
 
-Two blockers found on 2026-07-21:
+Superseding the "mechanism is unresolved" warning that stood here until 2026-07-21.
 
-1. **The `vivaldi.prefs` extension API is access-restricted.** It exists in the UI
-   context with `get`/`set`, but most paths return *"The pref api is not allowed to
-   access vivaldi.tabs.bar.position"*. Only some prefs (e.g. `vivaldi.homepage`) are
-   readable. So driving settings through the UI's own API is not a general solution.
-2. **Hand-patching `Preferences` JSON did not take effect.** With Vivaldi fully quit,
-   setting `vivaldi.tabs.bar.position = "left"` persisted in the file across a
-   relaunch (verified still present afterwards, and the profile has no `protection`
-   MAC block) — **but the UI still rendered `tabs-top`.** So the value is being
-   stored and ignored, meaning something else governs it: possibly a registered-pref
-   type mismatch, a per-window state store, or a separate workspace/session layer.
+**Hand-patching `Preferences` works.** The one failure — `vivaldi.tabs.bar.position`
+persisting but being ignored — was a **type error, not a mechanism failure**: it is an
+`enum`, stored as an **integer** (`left` = `1`), and the string `"left"` was written.
+Of the three hypotheses recorded at the time (type mismatch / per-window state /
+workspace layer), the first was correct.
 
-**Consequence for ADR-0004:** its premise — "scripted `Preferences` patch gated by
-levelset tests" — is not yet demonstrated to work at all. The levelset tests would
-have caught this, which is the good news; but the patch mechanism itself needs a
-working proof before the ADR can be relied on. Recorded as research Q7.
+The `vivaldi.prefs` extension API *is* still access-restricted, and that finding
+stands — but it no longer matters, because we never needed it.
+
+**Confirmed working recipe** (Vivaldi **must** be closed — it owns these files and
+rewrites them on exit):
+
+| Intent | Pref | Value |
+|---|---|---|
+| Register the CSS mods folder | `vivaldi.appearance.css_ui_mods_directory` | path string |
+| Vertical tab strip | `vivaldi.tabs.bar.position` | `1` (int) |
+| Palette / accent / radius | `vivaldi.themes.user` + `vivaldi.themes.current` | theme objects |
+| Light↔dark mapping | `vivaldi.theme.schedule.o_s` | `{"light": id, "dark": id}` |
+
+⚠️ `vivaldi.theme.schedule.enabled` defaults to `system`, and while it is `system` the
+**OS appearance overrides `vivaldi.themes.current`**. Set the `o_s` map as well, or the
+active theme silently will not be the one you selected.
+
+**Consequence for ADR-0004:** its premise is **demonstrated**, not merely plausible.
+The patch half is proven end to end with zero GUI steps; the levelset-test half is
+still to be written, and `prefs_definitions.json` gives it its expected types and
+defaults for free.

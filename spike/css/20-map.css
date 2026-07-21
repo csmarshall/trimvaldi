@@ -1,0 +1,76 @@
+/* SPIKE — throwaway. The --tf-* → Vivaldi --color* mapping layer.
+
+   This is "Route A": drive Vivaldi's own theme engine rather than fight its
+   selectors. Structurally it is the SAME SHAPE as trimfox mapping --tf-* onto
+   Firefox's chrome variables — which is a genuinely encouraging sign that the
+   token architecture survives the port even though not one selector does.
+
+   Vivaldi exposes 117 --color*/--radius*/--font custom properties, all defined
+   on #browser, so a single low-specificity block reaches nearly everything and
+   is immune to the selector churn that Route B (specificity-matched structural
+   overrides) is exposed to.
+
+   Rough and incomplete on purpose — this is a silhouette check, not the theme. */
+
+#browser {
+  /* Surfaces */
+  --colorBg:            var(--tf-surface);
+  --colorBgDark:        var(--tf-content);
+  --colorBgDarker:      var(--tf-field);
+  --colorBgIntense:     var(--tf-field);
+  --colorBgIntenser:    var(--tf-field);
+  --colorBgLight:       var(--tf-raised);
+  --colorBgLighter:     var(--tf-raised);
+  --colorBgLightIntense: var(--tf-raised);
+  --colorBgFaded:       var(--tf-raised);
+  --colorBgInverse:     var(--tf-raised);
+  --colorBgInverser:    var(--tf-raised);
+
+  /* The tab bar reads its own variable, undefined by default with a
+     `transparent` fallback — a deliberately open hook. */
+  --colorTabBar:        var(--tf-surface);
+
+  /* Text. Vivaldi's default --colorFg is #d3d9e3 — a BLUE-TINTED near-white.
+     Zero-blue is the whole point of the palette, so this one matters. */
+  --colorFg:            var(--tf-text);
+  --colorFgIntense:     var(--tf-text);
+  --colorFgFaded:       var(--tf-text-dim);
+  --colorFgFadedMore:   var(--tf-text-dim);
+  --colorFgFadedMost:   var(--tf-text-dim);
+
+  /* Accent — replaces Vivaldi's chrome accent. */
+  --colorAccentBg:        var(--tf-accent);
+  --colorAccentBgDark:    var(--tf-accent-active);
+  --colorAccentBgDarker:  var(--tf-accent-active);
+  --colorAccentBgFaded:   var(--tf-raised);
+  --colorAccentBgFadedMore: var(--tf-raised);
+  --colorAccentBgFadedMost: var(--tf-surface);
+  --colorAccentFg:        var(--tf-text);
+  --colorAccentFgFaded:   var(--tf-text-dim);
+  --colorAccentBorder:    var(--tf-line-solid);
+  --colorAccentBorderDark: var(--tf-line-solid);
+
+  /* Selection / highlight — Vivaldi ships #7aa0ff here. This is THE blue. */
+  --colorHighlightBg:     var(--tf-select);
+  --colorHighlightBgDark: var(--tf-select);
+  --colorHighlightBgFaded: var(--tf-raised);
+  --colorHighlightFg:     var(--tf-text);
+
+  /* Lines */
+  --colorBorder:         var(--tf-line-solid);
+  --colorBorderSubtle:   var(--tf-line-solid-inactive);
+  --colorBorderIntense:  var(--tf-line-solid);
+  --colorBorderDisabled: var(--tf-line-solid-inactive);
+
+  /* Structure — trim: Vivaldi's default 8px radius is much rounder than
+     trimfox's near-square chrome. */
+  --radius:        3px;
+  --radiusHalf:    2px;
+  --radiusRounded: 2px;
+  --radiusCap:     3px;
+
+  /* Vivaldi paints a background IMAGE behind the chrome by default
+     (bg_dark-8.png). Flat surfaces only. */
+  --browserBackgroundImage: none;
+  --unifiedBlur: none;
+}

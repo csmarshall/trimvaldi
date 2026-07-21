@@ -1,0 +1,73 @@
+/* SPIKE — throwaway. The signature: collapsed vertical rail, expands on hover.
+   Ugly on purpose. This is a silhouette check, not the theme.
+
+   ⚠️ !important IS REQUIRED HERE, and it is not a shortcut.
+   Vivaldi writes width as an INLINE style on #tabs-tabbar-container
+   (style="width: 360px; height: stretch;"), driven by the vivaldi.tabs.bar.width
+   pref. Inline styles beat all author CSS except !important, so there is no
+   selector clever enough to avoid it.
+
+   This does NOT break trimfox's override contract, because the !important is on
+   a rule whose VALUE is a token: a user redefining --tf-strip-collapsed in
+   user-overrides.css still wins, exactly as before. The contract is about the
+   token vocabulary, not about literal rules. But it is a caveat ADR-0006 should
+   record rather than discover later.
+
+   ADR-0005: the expanded strip OVERLAYS content, it does not push it — otherwise
+   every hover of a 14px edge target reflows the page. */
+
+#browser.tabs-left {
+  --tf-strip-collapsed: 14px;
+  --tf-strip-expanded:  240px;
+  --tf-anim: 90ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #browser.tabs-left { --tf-anim: 0s; }   /* accessibility is a floor, not a dial */
+}
+
+/* The wrapper holds the LAYOUT width — it stays collapsed forever, so page
+   content never reflows. It has no inline style, so no !important needed. */
+#browser.tabs-left .tabbar-wrapper {
+  width: var(--tf-strip-collapsed);
+  min-width: var(--tf-strip-collapsed);
+}
+
+/* The container is what actually expands, floating over the page. */
+#browser.tabs-left #tabs-tabbar-container.left {
+  width: var(--tf-strip-collapsed) !important;
+  background: var(--tf-surface);
+  border-right: 1px solid var(--tf-line-solid);
+  transition: width var(--tf-anim) ease;
+  overflow: hidden;
+}
+
+#browser.tabs-left #tabs-tabbar-container.left:hover {
+  width: var(--tf-strip-expanded) !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 30;
+}
+
+/* ── Trim: chrome inside the strip that isn't a tab ────────────────────────── */
+#browser.tabs-left .tabbar-workspace-button,
+#browser.tabs-left #tabs-tabbar-container .toolbar-tabbar-after,
+#browser.tabs-left #tabs-tabbar-container .SlideBar {
+  display: none;
+}
+
+/* ── At rest: no favicons, no labels — just a live tab count as lines ─────── */
+#browser.tabs-left #tabs-tabbar-container.left:not(:hover) .tab-position {
+  border-bottom: 1px solid var(--tf-line-solid);
+}
+
+#browser.tabs-left #tabs-tabbar-container.left:not(:hover) .tab-header {
+  opacity: 0;
+}
+
+/* The active tab still reads as a filled block at rest — shape without detail. */
+#browser.tabs-left #tabs-tabbar-container.left:not(:hover) .tab-wrapper.active .tab {
+  background: var(--tf-highlight);
+}
