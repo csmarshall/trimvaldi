@@ -27,6 +27,14 @@
   /* Above page content, below Vivaldi's own dialogs and menus. */
   --tf-strip-z: 30;
 
+  /* ── The address bar row ────────────────────────────────────────────────
+     Vivaldi reserves 53px for 34px of content, sized around the macOS traffic
+     lights (see 00-selectors.css). 38px reclaims most of that while leaving
+     the native window buttons room — they are drawn by macOS and CSS cannot
+     move them, so this is a floor set by the platform, not by taste.
+     Drop toward 34px for a tighter row; raise it if the buttons look cramped. */
+  --tf-addressbar-height: 38px;
+
   /* ── Motion ─────────────────────────────────────────────────────────────
      Fast enough to feel instant rather than animated. The strip is hovered
      constantly, so anything slower reads as lag. */

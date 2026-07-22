@@ -57,6 +57,8 @@ def satisfiable(requires, state):
         return state["theme_light"]
     if requires == "page-loaded":
         return state["page_loaded"]
+    if requires == "window-blurred":
+        return state["window_blurred"]
     return False
 
 
@@ -111,6 +113,10 @@ PROBE = """
     theme_light: /\\btheme-light\\b/.test(b.className),
     // A real page is loaded if the active tab is not a blank/internal one.
     page_loaded: !!document.querySelector('.BookmarkButton'),
+    // Detected INDEPENDENTLY of Vivaldi's own class, or the check would be
+    // circular: deriving "is it blurred?" from .isblurred would make the entry
+    // pass whether or not Vivaldi still sets it.
+    window_blurred: !document.hasFocus(),
   };
   const sel = {}, vars = {};
   for (const s of %SELECTORS%) {
