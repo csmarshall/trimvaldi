@@ -157,6 +157,19 @@
 }
 
 #browser.tabs-left #tabs-tabbar-container:is(.left, .right) {
+  /* ⚠️ border-box is load-bearing, not tidiness. Vivaldi styles this container
+     as content-box, so `width: 14px` + `border-right: 1px` makes it 15px wide
+     inside a 14px wrapper — the border then paints at x=14..15, which is
+     exactly where #webview-container starts, and the PAGE COVERS IT.
+
+     The symptom is nasty: the divider computes correctly, matches the mainbar's
+     colour, and is simply invisible, so it reads as "the rule never applied"
+     rather than "the rule applied and something painted over it".
+
+     With border-box the 1px sits INSIDE --tf-strip-collapsed, so the dial keeps
+     meaning "the total width of the rail" — the same way --tf-addressbar-height
+     means the whole row. */
+  box-sizing: border-box;
   width: var(--tf-strip-collapsed) !important;
   background: var(--tf-surface);
   border-right: 1px solid var(--tf-line-solid);
