@@ -18,6 +18,7 @@ cites its trimfox ancestor where one exists.
 | [0006](0006-import-order-not-cascade-layers.md) | Override contract via controlled import order, not cascade layers | trimfox ADR-0006 |
 | [0007](0007-palette-is-a-native-theme.md) | The palette is a native Vivaldi theme, not a stylesheet | trimfox ADR-0005 |
 | [0008](0008-one-palette-definition.md) | One palette definition generates both outputs | trimfox ADR-0005 |
+| [0009](0009-selector-registry-and-verifier.md) | Selector centralization via a registry and a live verifier | trimfox ADR-0007 |
 
 0001–0005 were taken on 2026-07-21 before any code existed, off the back of
 [`../design-ethos.md`](../design-ethos.md). **0006 corrects 0003 the same day**, once

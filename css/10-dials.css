@@ -1,0 +1,43 @@
+/* ============================================================================
+   trimvaldi — 10-dials.css
+   Structural --tf-* defaults. The knobs, not the colours.
+   ----------------------------------------------------------------------------
+   Token-only by design: this file names nothing belonging to Vivaldi. Every
+   Vivaldi selector and variable lives in 00-selectors.css ([ADR-0002],
+   [ADR-0009]).
+
+   COLOUR IS NOT HERE. [ADR-0007] ships the palette as a native Vivaldi theme,
+   so the colour tokens are aliased from Vivaldi's own --color* variables in
+   00-selectors.css. Changing the palette means changing the theme, not this
+   file. That is a real difference from trimfox, where the palette was a
+   stylesheet — see [ADR-0008] and the README.
+
+   Every value here is a default that 99-user-overrides.css can redefine, by
+   plain source order and with no !important ([ADR-0006]).
+   ============================================================================ */
+
+#browser {
+  /* ── The tab strip ──────────────────────────────────────────────────────
+     Collapsed width is a deliberate compromise: wide enough to be a reliable
+     pointer target at the screen edge, narrow enough to read as a rail rather
+     than a sidebar. Expanded width is only what a tab title needs. */
+  --tf-strip-collapsed: 14px;
+  --tf-strip-expanded: 240px;
+
+  /* Above page content, below Vivaldi's own dialogs and menus. */
+  --tf-strip-z: 30;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────
+     Fast enough to feel instant rather than animated. The strip is hovered
+     constantly, so anything slower reads as lag. */
+  --tf-anim: 90ms;
+  --tf-ease: ease;
+}
+
+/* Accessibility is a floor, not a dial — this deliberately sits AFTER the
+   defaults and is not something 99-user-overrides.css should undo. */
+@media (prefers-reduced-motion: reduce) {
+  #browser {
+    --tf-anim: 0s;
+  }
+}

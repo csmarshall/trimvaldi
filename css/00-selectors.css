@@ -1,0 +1,219 @@
+/* ============================================================================
+   trimvaldi — 00-selectors.css
+   THE ONLY FILE THAT NAMES VIVALDI'S DOM OR VIVALDI'S VARIABLES.
+   ----------------------------------------------------------------------------
+   [ADR-0002] concentrates the unstable, foreign dependency surface in one
+   auditable place. [ADR-0009] resolves how: plain CSS, no build step, plus the
+   machine-readable registry below and `tools/verify-selectors.py`, which
+   live-checks every entry against a running Vivaldi.
+
+   Two surfaces live here, not one:
+
+     SELECTORS — Vivaldi's class and id names. These fail SILENTLY when they
+                 change: a dead rule looks "slightly un-themed", not broken.
+     VARIABLES — Vivaldi's --color* custom properties. Aliased onto --tf-*
+                 below. This is the trimfox-shaped dependency (greppable, and
+                 a missing var is detectable), so it is the cheaper of the two.
+
+   EVERY OTHER FILE IN css/ IS TOKEN-ONLY. If you find yourself typing a
+   Vivaldi class name anywhere else, that rule belongs here instead.
+
+   Colour does NOT come from CSS. [ADR-0007] ships the palette as a native
+   Vivaldi theme, so Vivaldi's own --color* variables already carry trimfox's
+   grays; we alias them rather than restate them. That keeps ONE source of
+   truth for colour ([ADR-0008]) and is why there is no palette import here.
+
+   ── REGISTRY ───────────────────────────────────────────────────────────────
+   Format, parsed by tools/verify-selectors.py:
+
+       @sel  <name> | <selector> | <requires>
+       @var  <name> | <--vivaldi-var> | <requires>
+
+   <requires> is the browser state the entry needs in order to be present.
+   This field exists because a naive "does it match?" check produces FALSE
+   ALARMS: .BookmarkButton is absent on about:blank and present on a real page,
+   which reads exactly like a rename if you do not record the precondition.
+
+       always       present in every state
+       tabs-left    vertical tab bar (vivaldi.tabs.bar.position = 1)
+       theme-light  light theme active
+       page-loaded  a real, bookmarkable page is open
+       never        asserted ABSENT — we learn if Vivaldi starts defining it
+
+   Only lines between the two markers below are parsed, so this format
+   documentation does not register itself as an entry.
+
+   @registry-begin
+   @sel  root              | #browser                                  | always
+   @sel  root/dark         | #browser.theme-dark                       | always
+   @sel  root/light        | #browser.theme-light                      | theme-light
+   @sel  root/blurred      | #browser.isblurred                        | always
+   @sel  root/tabs-left    | #browser.tabs-left                        | tabs-left
+   @sel  strip/wrapper     | .tabbar-wrapper                           | always
+   @sel  strip/container   | #tabs-tabbar-container                    | always
+   @sel  strip/vertical    | #tabs-tabbar-container:is(.left, .right)  | tabs-left
+   @sel  strip/strip       | .tab-strip                                | always
+   @sel  strip/position    | .tab-position                             | always
+   @sel  strip/tab         | .tab-wrapper                              | always
+   @sel  strip/tab-active  | .tab-wrapper.active                       | always
+   @sel  strip/tab-body    | .tab                                      | always
+   @sel  strip/tab-header  | .tab-header                               | always
+   @sel  strip/resize      | #tabs-tabbar-container .SlideBar          | always
+   @sel  strip/before      | #tabs-tabbar-container .toolbar-tabbar-before | always
+   @sel  strip/after       | #tabs-tabbar-container .toolbar-tabbar-after  | always
+   @sel  strip/workspace   | .tabbar-workspace-button                  | always
+   @sel  chrome/inner      | #main > .inner                            | always
+   @sel  chrome/webview    | #webview-container                        | always
+
+   @var  surface           | --colorBg                                 | always
+   @var  text              | --colorFg                                 | always
+   @sel  strip/inner       | #tabs-container                           | always
+   @sel  strip/inner-vert  | #tabs-container:is(.left, .right)         | tabs-left
+   @var  tabbar            | --colorTabBar                             | never
+   @registry-end
+   ── END REGISTRY ───────────────────────────────────────────────────────────
+
+   `@var tabbar | --colorTabBar | never` is deliberate: Vivaldi declares
+   `background-color: var(--colorTabBar, transparent)` but never DEFINES
+   --colorTabBar. It is an undefined variable with a fallback — a hook left
+   open for exactly this purpose. `never` tells the verifier to assert it stays
+   undefined, so we learn if Vivaldi ever starts setting it itself.
+   ============================================================================ */
+
+
+/* ── Vivaldi variables → --tf-* ─────────────────────────────────────────────
+   Our theme (ADR-0007) already set Vivaldi's seeds from trimfox's palette, so
+   we alias rather than restate — ONE source of truth for colour (ADR-0008).
+
+   Only TWO Vivaldi variables are depended on. That is deliberate: this is a
+   foreign dependency surface, so it should be as small as we can make it.
+
+   ⚠️ Do NOT alias Vivaldi's other --color* variables without checking the
+   VALUE, not just the name. Measured on 8.1.4087.55 against trimfox's intent:
+
+       --colorBorder    #181818  DARKER than the surface. trimfox's line is
+                                 LIGHTER (#505050) — opposite polarity, so
+                                 separators would render as dark grooves.
+       --colorFgFaded   #f2f2f2  vs trimfox's #aaaaaa. Not dim in any sense.
+
+   Both would have "worked" — no error, no missing rule, just quietly wrong.
+   Exactly the failure mode ADR-0002 exists for, one layer further in. */
+#browser {
+  --tf-surface: var(--colorBg);
+  --tf-text:    var(--colorFg);
+
+  /* Lines and highlights are DERIVED, not stored. trimfox defines them as
+     alpha-white overlays and documents --tf-line-solid as "the OPAQUE form of
+     --tf-line over --tf-surface", so a color-mix IS trimfox's own formula
+     rather than an approximation of it.
+
+     Two things fall out. It auto-adapts to light/dark, because Vivaldi swaps
+     the seeds for us and the ink follows --colorFg. And it stays correct if
+     the palette changes, because nothing is copied.
+
+     Verified live to reproduce trimfox EXACTLY on dark (#505050, #373737) and
+     to within 1/255 on light (#c5c5c5 vs #c4c4c4). */
+  --tf-line:                color-mix(in srgb, var(--colorFg) 18%, transparent);
+  --tf-line-inactive:       color-mix(in srgb, var(--colorFg)  6%, transparent);
+  --tf-line-solid:          color-mix(in srgb, var(--colorFg) 18%, var(--colorBg));
+  --tf-line-solid-inactive: color-mix(in srgb, var(--colorFg)  6%, var(--colorBg));
+  --tf-highlight:           color-mix(in srgb, var(--colorFg) 10%, transparent);
+
+  /* NOT defined here on purpose: --tf-raised and --tf-text-dim. Neither has a
+     formula trimfox states, and neither has a Vivaldi variable whose VALUE is
+     close enough to alias. They belong to the generated palette (ADR-0008).
+     No rule below depends on them yet. */
+}
+
+
+/* ── The signature: collapsed rail, expands on hover ────────────────────────
+   [ADR-0005] the expanded strip OVERLAYS content rather than pushing it —
+   otherwise every hover of a ~14px edge target reflows the page.
+
+   ⚠️ !important is REQUIRED and is not laziness. Vivaldi writes the width as
+   an INLINE style on #tabs-tabbar-container, driven by vivaldi.tabs.bar.width,
+   and inline styles beat all author CSS. The override contract survives
+   because the VALUE is still a token: redefining --tf-strip-collapsed in
+   99-user-overrides.css still wins. See [ADR-0006]. */
+
+/* The wrapper owns the LAYOUT width and never expands, so content never reflows.
+   It carries no inline style, so it needs no !important. */
+#browser.tabs-left .tabbar-wrapper {
+  width: var(--tf-strip-collapsed);
+  min-width: var(--tf-strip-collapsed);
+}
+
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right) {
+  width: var(--tf-strip-collapsed) !important;
+  background: var(--tf-surface);
+  border-right: 1px solid var(--tf-line-solid);
+  overflow: hidden;
+  transition: width var(--tf-anim) var(--tf-ease);
+}
+
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right):hover {
+  width: var(--tf-strip-expanded) !important;
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: var(--tf-strip-z);
+}
+
+
+/* ── Trim: chrome inside the strip that isn't a tab ─────────────────────────
+   Trims that are a native SETTING rather than CSS — status bar, panel rail —
+   are the installer's job, not this file's. Doing them here would be fighting
+   Vivaldi to hide something it will happily not render. */
+#browser.tabs-left :is(
+  .tabbar-workspace-button,
+  #tabs-tabbar-container .toolbar-tabbar-after,
+  #tabs-tabbar-container .SlideBar
+) {
+  display: none;
+}
+
+
+/* ── At rest: shape without detail ──────────────────────────────────────────
+   trimfox's "live tab count read as separator lines". Favicon and label are
+   suppressed while collapsed; each tab leaves a hairline so the strip still
+   conveys how many tabs exist and which one is active.
+
+   ⚠️ The strip's own horizontal inset MUST be removed while collapsed, and
+   this is not cosmetic — without it there is no visible hint the tab bar
+   exists at all. Vivaldi sets, for vertical tab bars:
+
+       #tabs-container.left .tab-strip {
+         margin: 0 max(calc(var(--densityGap) * 2), 1px);   ... 6px each side
+         max-width: calc(100% - var(--densityGap) * 2);
+       }
+
+   (Quoted without comment markers on purpose — CSS comments do NOT nest, so an
+   inner close-marker ends this block early and silently drops the rules that
+   follow it. That is exactly how this rule got lost the first time.)
+
+   At the native 360px, 12px of inset is invisible. At a 14px rail it consumes
+   12 of the 14, leaving .tab-position 2px wide: the separator lines DO render,
+   they are just 2px long, so the rail reads as empty chrome.
+
+   The fix mirrors what Vivaldi itself does for maximized/fullscreen vertical
+   tabs (`margin: 0; max-width: 100%`), so we are following its grain rather
+   than inventing an override.
+
+   The general lesson: a collapsed rail is not merely a narrow sidebar. Fixed
+   insets that are imperceptible at full width dominate at 14px. */
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) #tabs-container .tab-strip {
+  margin: 0;
+  max-width: 100%;
+}
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) .tab-position {
+  border-bottom: 1px solid var(--tf-line-solid);
+}
+
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) .tab-header {
+  opacity: 0;
+}
+
+/* trimfox uses --tf-highlight, not a raised surface, for the active-tab fill —
+   a translucent overlay so the tab reads as lit rather than as a lighter box. */
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) .tab-wrapper.active .tab {
+  background: var(--tf-highlight);
+}

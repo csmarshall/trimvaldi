@@ -168,6 +168,36 @@ a file Vivaldi owns, on unverified key names) into a *tested* dependency surface
 extends trimfox's drift-monitoring instinct from the chrome layer to the settings
 layer. That was Charles's addition, not in the original options.
 
+## A2/A3 REVISED by the feasibility spike — 2026-07-22
+
+**A2 and A3 above are superseded, and the deliverable's shape changed with them.**
+Kept rather than rewritten, because the reasoning was sound and only the premise was
+wrong — the same pattern as ADR-0003.
+
+A2/A3 predicted trimvaldi would mirror trimfox: *settings recipe + stylesheet*,
+i.e. `user.js` + `userChrome.css`. That assumed the palette lives in CSS. It cannot.
+
+Vivaldi's theme engine computes ~117 `--color*` properties and writes them as a
+**single inline `style` attribute on `#browser`**, which beats all author CSS. But it
+**derives** those 117 from a theme object of about **five seed colours**, and themes
+are ordinary prefs. So the palette ships as a *native Vivaldi theme*
+([ADR-0007](adr/0007-palette-is-a-native-theme.md)), and because that leaves the
+palette in two representations that must agree, one definition generates both
+([ADR-0008](adr/0008-one-palette-definition.md)).
+
+**Revised shape:**
+
+    predicted (A2/A3):  settings recipe  +  stylesheet
+    actual:             palette definition  →  generator  →  { theme object, CSS tokens }
+                        +  a much SMALLER stylesheet
+                        +  a settings recipe carrying MORE of the load
+
+The direction of A2 holds and then some — *more* of the trim is a native setting than
+expected (status bar, panel rail, the page-derived accent). What changed is that
+"theming" in Vivaldi is substantially a **pref** operation, not a CSS one. A3's worry
+about ergonomics regression versus `user.js` is answered: the whole thing is scripted
+to zero GUI steps, which is *better* than `user.js`, not worse.
+
 **Still open, deliberately deferred until the DOM is visible:**
 
 - **A8** — light/dark source of truth (`prefers-color-scheme` vs Vivaldi's own theme

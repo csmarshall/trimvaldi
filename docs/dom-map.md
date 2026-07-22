@@ -137,6 +137,13 @@ Feeds directly into [ADR-0002](adr/0002-centralize-selectors.md).
    **These change between profiles and between launches** — confirmed: the same
    button had `afdfefec-…`, then `c3c37c2b-…`, then `aed38994-…` across three
    launches of the same build. They are instance identity, not semantics.
+1b. **UUIDs also appear as `id`s, not only classes** (found 2026-07-22):
+   `div#b32f739c-3a5e-4c4c-b261-89b431e353f3.button-toolbar.toolbar-spacer-panel`.
+   Same rule applies — never target them.
+1c. **IDs ARE NOT UNIQUE in Vivaldi's UI** (found 2026-07-22). `#ui-region-panel_button`
+   exists **10 times** in one window. An `#id` selector can silently match a crowd,
+   and `document.querySelector('#…')` silently returns only the first — so DOM
+   exploration can under-report. Check `querySelectorAll(...).length`.
 2. **NEVER target `#tab-<id>`.** Per-tab runtime ids (`#tab-694168866`).
 3. **Prefer** `#browser` state classes, semantic component classes
    (`.tab-strip`, `.UrlBar-AddressField`, `.toolbar-statusbar`), and structural
@@ -150,7 +157,7 @@ Vivaldi ships its UI unpacked, so selectors can be found without devtools:
 
 ```
 /Applications/Vivaldi.app/Contents/Frameworks/Vivaldi Framework.framework/
-  Versions/8.1.4087.55/Resources/vivaldi/
+  Versions/<version>/Resources/vivaldi/     ← version dir changes on every update
     window.html          entry point
     style/common.css     1023K — the whole UI theme
     *.js                 the UI bundle (greppable for pref path names)
@@ -159,9 +166,50 @@ Vivaldi ships its UI unpacked, so selectors can be found without devtools:
 Use the live DOM to confirm what is *actually rendered*; use the files to discover
 what exists.
 
+## `#main > .inner` — where the strip actually lives (mapped 2026-07-22)
+
+Vertical tab mode, once `vivaldi.tabs.bar.position = 1`:
+
+```
+#main.left
+  .mainbar                          [1440x54]   address bar, full width
+  .inner
+    #modal-bg
+    #panels-container.left.icons    [41x1584]   ← the PANEL RAIL
+    .tabbar-wrapper                 [14x1584]   ← the tab strip (collapsed)
+    #webview-container              [1385x1584]
+```
+
+**The panel rail is a DOM sibling BEFORE the tab strip**, which is why the strip is
+not the leftmost element. Trimming the rail is a pref
+(`vivaldi.panels.state` / `window_defaults` → `barVisible: false`), and doing so makes
+the strip leftmost with no CSS reordering.
+
+### ⚠️ Fixed insets dominate at rail width
+
+Vivaldi styles vertical tab strips with:
+
+```
+#tabs-container.left .tab-strip {
+  margin: 0 max(calc(var(--densityGap) * 2), 1px);
+  max-width: calc(100% - var(--densityGap) * 2);
+}
+```
+
+That is 6px each side. At the native 360px it is imperceptible. **At a 14px collapsed
+rail it consumes 12 of 14**, leaving `.tab-position` 2px wide — the per-tab separator
+lines still render, but at 2px they are invisible and the rail reads as empty chrome
+with no hint a tab bar exists.
+
+Vivaldi's own fix for maximized/fullscreen vertical tabs is
+`margin: 0; max-width: 100%`, so overriding it follows the grain rather than fighting.
+
+**Generalize this:** a collapsed rail is not merely a narrow sidebar. Any fixed padding,
+margin, gap or min-width that is invisible at full width may dominate at 14px.
+
 ## Still unmapped
 
-- Vertical tab mode (blocked — see [`vivaldi-research.md`](vivaldi-research.md) Q7)
+- Panels rail internals, menus, tab stacks, pinned tabs
 - Panels rail, menus, tab stacks, pinned tabs
 - The `.inner` / page-content boundary the overlay strip
   ([ADR-0005](adr/0005-hover-expand-overlays.md)) must float above

@@ -44,7 +44,12 @@ check a dependency surface that is enumerable in one place.
 - **Trade-off:** a layer of indirection between the CSS and the DOM it targets, and
   the discipline to never reach around it. Same tax trimfox pays for its token layer,
   taken deliberately for the same reason.
-- **Open:** how aliasing is expressed in practice (CSS custom properties cannot hold
-  selectors) — likely a documented block of grouped selector definitions with a
-  strict convention, resolved once the real DOM is visible. See
-  [`../vivaldi-research.md`](../vivaldi-research.md) Q2.
+- ~~**Open:** how aliasing is expressed in practice~~ — **RESOLVED by
+  [ADR-0009](0009-selector-registry-and-verifier.md)** (2026-07-22): plain CSS, no
+  build step, with a machine-readable registry in `css/00-selectors.css` live-checked
+  by `tools/verify-selectors.py`. The guess above was close — a documented block of
+  grouped definitions with a strict convention — but missed two things the real DOM
+  showed. Each entry needs the browser **state** it requires, or state-dependent
+  selectors read as renames; and Vivaldi's **variable names are a second foreign
+  surface**, more dangerous than selectors because a variable can exist with a wrong
+  value and fail silently at the value level rather than the name level.

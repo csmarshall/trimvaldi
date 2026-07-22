@@ -1,14 +1,20 @@
 # Vivaldi research — verification log
 
-**Reference build:** Vivaldi **8.1.4087.55** (arm64 macOS), installed via
-`brew install --cask vivaldi` on 2026-07-21 on `toad`.
+**Reference build:** Vivaldi **8.1.4087.56** (arm64 macOS) on `toad`, installed via
+`brew install --cask vivaldi` on 2026-07-21 as 8.1.4087.55 and **auto-updated to .56
+on 2026-07-22 mid-session** — which is how Q6 got answered. Findings below were
+measured against .55 unless noted; the selector surface was re-verified green against
+.56.
 
 Items are marked `VERIFIED` with evidence, or `OPEN` where still unconfirmed. Do not
 cite an `OPEN` item as fact.
 
-> **Updated 2026-07-21 after the feasibility spike** ([`../spike/README.md`](../spike/README.md)).
-> Q1, Q3, Q5 and Q7 are now closed by measurement. **Q6 remains genuinely open** —
-> update survival has still never been tested, only reasoned about.
+> **Updated 2026-07-21 after the feasibility spike** ([`../spike/README.md`](../spike/README.md)):
+> Q1, Q3, Q5 and Q7 closed by measurement.
+>
+> **Updated 2026-07-22: Q6 is now ANSWERED too** — Vivaldi auto-updated mid-session
+> against a modded profile and everything survived. Scope that claim to *routine*
+> updates; see Q6. **Q2 is the only substantially open item left.**
 
 ## The second most useful discovery — `prefs_definitions.json`
 
@@ -31,7 +37,7 @@ levelset tests: expected type and default, per pref, straight from the build.
 no devtools required for static recon:
 
     /Applications/Vivaldi.app/Contents/Frameworks/Vivaldi Framework.framework/
-      Versions/8.1.4087.55/Resources/vivaldi/
+      Versions/<version>/Resources/vivaldi/          ← version dir changes on update!
         window.html          the UI entry point
         style/common.css     1023K — the entire UI theme
         components/          per-feature CSS
@@ -183,14 +189,31 @@ either way — it only told us Vivaldi does not rely on it.
 So the privileged `chrome://` context behaves like ordinary page content here, and
 trimfox's parametric `tinted` palette can port, not just `grayscale`.
 
-## Q6 — Install / distribution and update survival `STILL GENUINELY OPEN`
+## Q6 — Install / distribution and update survival `ANSWERED — observed, 2026-07-22`
 
-> **Not closed by the spike.** Everything we have is inference: the mods folder and
-> the profile both live outside the app bundle, and community mods are reported to
-> survive updates. **We have never actually observed a Vivaldi update against a
-> modded profile.** Do not state update survival as fact in the README. It can only
-> be answered by waiting for a real update, or by installing an older build and
-> upgrading it deliberately.
+> **Vivaldi auto-updated 8.1.4087.55 → 8.1.4087.56 mid-session, against a modded
+> profile, unprompted.** So the thing we said could only be answered by waiting for a
+> real update got answered by one. Measured immediately afterwards:
+>
+>     CSS mods still loading        ✅  00-selectors.css, 10-dials.css
+>     our rules still applying      ✅
+>     trimvaldi theme               ✅  theme-id-trimvaldi-dark
+>     vertical tabs                 ✅  tabs-left
+>     accentFromPage: false         ✅  still off
+>     all 23 registered selectors   ✅  0 failures on the new build
+>
+> That last line is the useful one: the entire selector surface survived a real build
+> change, checked by `tools/verify-selectors.py` ([ADR-0009](adr/0009-selector-registry-and-verifier.md)),
+> which was written hours earlier and got an unplanned first real test.
+>
+> ⚠️ **Scope this claim honestly.** This was a **patch** update (`.55` → `.56`). It is
+> strong evidence that mods and prefs survive routine updates — which is what the
+> inference below predicted — but it is **not** evidence about a major version bump,
+> where Vivaldi's UI DOM could change substantially. The README should say "survives
+> routine updates, verified once" and not more.
+>
+> The original inference, now supported: the mods folder and the profile both live
+> outside the app bundle, so an application update has no reason to touch them.
 
 The CSS mods folder is user-chosen and lives outside the app bundle, which suggests
 mods are **not** clobbered by application updates the way a patched `browser.html`
