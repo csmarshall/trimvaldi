@@ -77,6 +77,8 @@
    @sel  bar/mainbar       | #main > .mainbar                          | always
    @sel  bar/address       | .toolbar-mainbar.toolbar-addressbar       | always
    @sel  bar/winbuttons    | .window-buttongroup.on-mainbar            | always
+   @sel  bar/urlfield      | .UrlBar-AddressField                      | always
+   @sel  bar/urlinput      | #urlFieldInput                            | always
 
    @sel  strip/inner       | #tabs-container                           | always
    @sel  strip/inner-vert  | #tabs-container:is(.left, .right)         | tabs-left
@@ -212,6 +214,42 @@
    practice, and it is why ADR-0002 keeps these in one reviewable file. */
 #browser.mac .toolbar-mainbar.toolbar-addressbar.toolbar-visible {
   min-height: var(--tf-addressbar-height);
+}
+
+
+/* ── Chrome type ────────────────────────────────────────────────────────────
+   trimfox's "small consistent chrome typeface", applied at the root.
+
+   No blunt `*` rule is needed, and that matters — one would also hit icon
+   sizing and SVG metrics. Vivaldi's chrome uses ONE dominant size: #browser is
+   13px and 284 elements inherit it, against 9 at 12px and 5 at 16px. So setting
+   it here cascades to almost everything, and the handful Vivaldi sizes
+   explicitly (headers, badges) keep their own scale, which is what we want.
+
+   The tab strip still needs its own rule below: Vivaldi sets 12px there
+   explicitly, so inheritance does not reach it. */
+#browser {
+  font-size: var(--tf-font-size);
+  font-family: var(--tf-font-family);
+}
+
+
+/* ── The URL field ──────────────────────────────────────────────────────────
+   trimfox treats the address bar as an INSET field — darker than the chrome
+   around it, hairline-bordered — so it reads as something you type into rather
+   than another button. Vivaldi ships the opposite: #2e2e2e against a #2a2a2a
+   surface, i.e. very slightly RAISED, which is why it currently reads as part
+   of the toolbar rather than a distinct field.
+
+   --tf-field is the inset tier of the palette (#1c1c1c dark / #ffffff light),
+   so this inverts correctly in both themes without a second rule. */
+#browser .UrlBar-AddressField {
+  background-color: var(--tf-field);
+  border: 1px solid var(--tf-line-solid);
+}
+
+#browser #urlFieldInput {
+  font-size: var(--tf-fs-field);
 }
 
 

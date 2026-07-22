@@ -64,6 +64,10 @@
   --tf-font-family: system-ui, -apple-system, sans-serif;
   --tf-font-size: 7pt;
 
+  /* The URL field earns a slightly larger tier — it is the one piece of chrome
+     text you actually read and type into, rather than scan. trimfox's ratio. */
+  --tf-fs-field: calc(var(--tf-font-size) * 1.1);
+
   /* ── Tab separators ─────────────────────────────────────────────────────
      How far the separator is inset from the strip's leading edge. trimfox
      added this because a full-width border runs straight into the window
