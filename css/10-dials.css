@@ -28,12 +28,23 @@
   --tf-strip-z: 30;
 
   /* ── The address bar row ────────────────────────────────────────────────
-     Vivaldi reserves 53px for 34px of content, sized around the macOS traffic
-     lights (see 00-selectors.css). 38px reclaims most of that while leaving
-     the native window buttons room — they are drawn by macOS and CSS cannot
-     move them, so this is a floor set by the platform, not by taste.
-     Drop toward 34px for a tighter row; raise it if the buttons look cramped. */
-  --tf-addressbar-height: 38px;
+     A measured compromise, not a guess. Vivaldi reserves 53px for 34px of
+     content, and that number is not sloppiness: the macOS traffic lights are
+     12.5px across with their centre fixed at y=25.8, so a 51.5px row is
+     exactly what centres them. Vivaldi rounds to 53.
+
+     The lights are drawn by macOS at a fixed inset, so CSS cannot move them —
+     the ONLY lever is this height. That puts trim and alignment in direct
+     opposition:
+
+         51px  lights perfectly centred, but ~2px saved. Vivaldi's padding back.
+         44px  lights 3.8px low, 9px saved.              ← chosen
+         38px  lights 6.8px low, 15px saved. Tightest.
+
+     Charles chose the middle: keep most of the trim, stop the misalignment
+     being the first thing you notice. Change this one value to move along
+     that scale; nothing else needs touching. */
+  --tf-addressbar-height: 44px;
 
   /* ── Motion ─────────────────────────────────────────────────────────────
      Fast enough to feel instant rather than animated. The strip is hovered
