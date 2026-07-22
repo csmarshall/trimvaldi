@@ -78,6 +78,15 @@ documentation above the registry does not register itself.
 - **Positive: aliasing by VALUE, not just name.** Registering variables forced us to
   compare values against trimfox's intent, which is what caught `--colorBorder`'s
   inverted polarity. A name-only check would have missed it.
+- **Refinement (2026-07-22): the invariant is REGISTERED, not one-file.** The
+  generated `css/20-palette.css` scopes its blocks with `#browser.theme-dark` /
+  `.theme-light`, which are Vivaldi selectors — so the literal "only one file names
+  Vivaldi's DOM" rule is already broken by a generated artifact. The rule that
+  actually matters, and the one this ADR is really about, is that **every Vivaldi
+  selector is registered and live-checked**. Both theme classes are registered
+  (`root/dark`, `root/light`), so the dependency surface stays enumerable. Restated:
+  *`00-selectors.css` is the only **hand-written** file that names Vivaldi's DOM, and
+  nothing may name it without a registry entry.*
 - **Trade-off: enforcement is a tool, not the language.** Nothing physically stops
   someone typing a Vivaldi class into another file; the convention plus review plus
   the verifier is what holds. Accepted as the price of readable CSS.

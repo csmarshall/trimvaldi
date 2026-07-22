@@ -75,6 +75,44 @@ Generated files carry a "do not edit" header naming the source and the generator
   generator**. Overriding a token changes our rules immediately; changing the *chrome*
   palette is a theme-level change and is a different, documented operation. This
   distinction did not exist in trimfox and must be stated plainly in the README.
-- **Open:** the definition format is not chosen yet. It should be whatever makes the
-  file readable as a palette at a glance — legibility across the trimfox/trimvaldi
-  family is the reason the `--tf-*` names were kept identical in the first place.
+- ~~**Open:** the definition format is not chosen yet.~~ **RESOLVED 2026-07-22 — a
+  commented INI**, `palettes/<name>.ini`.
+
+  TOML would have been the obvious pick, but `tomllib` needs Python 3.11 and the
+  repo's other tools run on the system 3.9. JSON is stdlib but has **no comments**,
+  and trimfox's palettes are heavily commented — they explain *why* each colour is
+  what it is. Losing that would be a real regression in exactly the legibility this
+  ADR is trying to protect, so a format was chosen that keeps it.
+
+## Implementation notes — 2026-07-22
+
+`tools/build-palette.py`. Three token classes, and the generator **enforces** the
+split so a value cannot quietly end up defined twice:
+
+    ALIASED  Vivaldi supplies it exactly → aliased from --colorBg / --colorFg in
+             00-selectors.css. Gets light/dark switching free, since Vivaldi swaps
+             the seeds itself. (surface, text)
+    DERIVED  trimfox states a formula → computed with color-mix() in
+             00-selectors.css. Putting one of these in the .ini is a HARD ERROR:
+             that is precisely the second source of truth this ADR removes.
+             (line, line-inactive, line-solid, line-solid-inactive, highlight)
+    EMITTED  no close-enough Vivaldi equivalent and no stated formula → written to
+             css/20-palette.css. (raised, text-dim, field, content, select,
+             accent*, glyph, attention, highlight-inactive)
+
+The derivation formula ships with a **regression test against trimfox's own
+published values**, run on every generate — 18% white over `#202020` must give
+`#484848` and 6% must give `#2d2d2d`, exactly. If it ever stops matching, the
+generator refuses to run, because silently redefining what trimfox means by a
+separator line is the failure this is guarding.
+
+`--check` verifies the committed outputs match the definition and exits non-zero
+if not, so a hand-edit of a generated file is caught rather than absorbed.
+`tools/apply-settings.py` reads the generated theme JSON rather than carrying its
+own copy of the seeds — otherwise the tool most able to cause the drift would be
+the one blind to it.
+
+**Verified end to end:** all four guards fire (derived-token-in-definition,
+mismatched light/dark token sets, hand-edited output, stale-on-check), and the
+live browser resolves aliased, derived and generated tokens together with
+`--tf-raised: #383838` and `--tf-text-dim: #aaaaaa` matching trimfox exactly.

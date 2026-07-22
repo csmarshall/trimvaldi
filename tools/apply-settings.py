@@ -75,37 +75,24 @@ def recipe(css_dir):
     ]
 
 
-# ── The palette, as a native Vivaldi theme (ADR-0007) ───────────────────────────
-# Seeds only; Vivaldi derives ~117 --color* properties from these.
-# TODO(ADR-0008): generate this and css/ from ONE palette definition. Until then
-# these values are the source of truth and css/00-selectors.css aliases them.
-PALETTES = {
-    # trimfox's grayscale ramp, lifted uniformly by +10 so Vivaldi's derivation has
-    # the headroom it assumes. trimfox's GAPS are preserved exactly (10/4/14/39);
-    # its absolute values are not the design.
-    "dark":  {"colorBg": "#2a2a2a", "colorFg": "#ffffff", "colorAccentBg": "#707070",
-              "colorHighlightBg": "#5f5f5f", "colorWindowBg": "#262626"},
-    "light": {"colorBg": "#ececec", "colorFg": "#111111", "colorAccentBg": "#707070",
-              "colorHighlightBg": "#b8b8b8", "colorWindowBg": "#f7f7f7"},
-}
-
-STRUCTURE = {
-    "engineVersion": 1, "version": 1,
-    # THE highest-value single setting for zero-blue: Vivaldi tints its chrome from
-    # the page's theme colour by default, which is directly hostile to a grayscale
-    # palette.
-    "accentFromPage": False,
-    "accentOnWindow": False, "accentSaturationLimit": 0, "preferSystemAccent": False,
-    "alpha": 1, "blur": 0, "contrast": 0, "radius": 3,
-    "backgroundImage": "", "backgroundPosition": "stretch", "backgroundSource": "",
-    "colorPosition": "unified", "transparencyTabBar": False,
-    "transparencyTabs": False, "url": "",
-}
+# ── The palette, as a native Vivaldi theme (ADR-0007) ───────────────────────
+# NOT defined here. The palette has ONE source of truth — palettes/<name>.ini —
+# from which tools/build-palette.py generates both the CSS tokens and this theme
+# object ([ADR-0008]). Duplicating the seeds here is exactly the drift this tool
+# would then be unable to detect, so it reads the generated artifact instead and
+# refuses to run if it is missing or stale.
+PALETTE = "grayscale"
 
 
-def themes():
-    return [{**STRUCTURE, **PALETTES[v], "id": f"trimvaldi-{v}",
-             "name": f"trimvaldi {v}"} for v in ("dark", "light")]
+def load_theme():
+    path = REPO / "palettes" / f"{PALETTE}.theme.json"
+    if not path.exists():
+        sys.exit(f"2: {path.relative_to(REPO)} not found — run tools/build-palette.py")
+    data = json.loads(path.read_text())
+    themes = data.get("themes")
+    if not themes:
+        sys.exit(f"2: {path.relative_to(REPO)} has no themes — regenerate it")
+    return themes
 
 
 # ── Vivaldi's pref registry ─────────────────────────────────────────────────────
@@ -236,7 +223,7 @@ def main():
         set_path(data, path, value)
 
     # Themes (ADR-0007). Idempotent: drop previous trimvaldi entries before adding.
-    ours = themes()
+    ours = load_theme()
     ids = {t["id"] for t in ours}
     user = data.setdefault("vivaldi", {}).setdefault("themes", {}).setdefault("user", [])
     user[:] = [t for t in user if t.get("id") not in ids] + ours
