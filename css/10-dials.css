@@ -46,6 +46,31 @@
      that scale; nothing else needs touching. */
   --tf-addressbar-height: 44px;
 
+  /* ── Type ───────────────────────────────────────────────────────────────
+     trimfox's chrome typeface, ported verbatim. 7pt (≈9.33px) is deliberately
+     smaller than any browser ships: chrome text is reference material you scan,
+     not prose you read, so it should recede.
+
+     ⚠️ NOT -apple-system, which is what trimfox uses. It does NOT resolve in
+     Vivaldi's chrome context and silently falls back to SERIF — tab labels
+     render in Times. Fingerprinted by measuring text width at 40px:
+
+         -apple-system  57.7578125  ← identical to serif, i.e. unresolved
+         serif          57.7578125
+         system-ui      57.5        ← resolves to a real UI face
+
+     A font that fails by falling back rather than erroring is the same shape of
+     bug as a dead selector, and just as easy to miss in a screenshot. */
+  --tf-font-family: system-ui, -apple-system, sans-serif;
+  --tf-font-size: 7pt;
+
+  /* ── Tab separators ─────────────────────────────────────────────────────
+     How far the separator is inset from the strip's leading edge. trimfox
+     added this because a full-width border runs straight into the window
+     frame; the inset keeps the line from touching the edge and reads as a
+     deliberate rule rather than a seam. Its own default is 4px. */
+  --tf-sep-inset: 4px;
+
   /* ── Motion ─────────────────────────────────────────────────────────────
      Fast enough to feel instant rather than animated. The strip is hovered
      constantly, so anything slower reads as lag. */

@@ -73,6 +73,7 @@
    @sel  strip/workspace   | .tabbar-workspace-button                  | always
    @sel  chrome/inner      | #main > .inner                            | always
    @sel  chrome/webview    | #webview-container                        | always
+   @sel  chrome/page       | #webpage-stack                            | always
    @sel  bar/mainbar       | #main > .mainbar                          | always
    @sel  bar/address       | .toolbar-mainbar.toolbar-addressbar       | always
    @sel  bar/winbuttons    | .window-buttongroup.on-mainbar            | always
@@ -237,6 +238,28 @@
 }
 
 
+/* ── Let the page reach the window edge ─────────────────────────────────────
+   Vivaldi insets the page in unified-UI mode so it appears to float:
+
+       …unified-ui… #webpage-stack   { margin-left: 6px; margin-right: 6px; }
+       #browser.tabs-left … #webpage-stack { margin-left: 0; }
+       …no-bottom-ui… #webpage-stack { margin-bottom: 6px; }
+
+   Two things made it read as broken rather than as a style. Vivaldi already
+   zeroes margin-left for .tabs-left, so the inset was LOPSIDED — flush on the
+   left, 6px on the right. And `.no-bottom-ui` only appears once the status bar
+   is gone, so hiding the status bar is what ADDED the bottom gap: our own trim
+   caused half of it.
+
+   trimfox has no floating page; content runs to the frame and the hairlines do
+   the separating. Specificity here is (3,1,0) against Vivaldi's (2,5,0) — ids
+   dominate, so no !important. */
+#browser.unified-ui #webview-container #webpage-stack {
+  margin-right: 0;
+  margin-bottom: 0;
+}
+
+
 /* ── Trim: chrome inside the strip that isn't a tab ─────────────────────────
    Trims that are a native SETTING rather than CSS — status bar, panel rail —
    are the installer's job, not this file's. Doing them here would be fighting
@@ -282,8 +305,43 @@
   margin: 0;
   max-width: 100%;
 }
-#browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) .tab-position {
-  border-bottom: 1px solid var(--tf-line-solid);
+/* The separator is a background GRADIENT, not a border-bottom, so it can be
+   INSET from the strip's leading edge — trimfox's fix for a full-width border
+   running straight into the window frame. Transparent for --tf-sep-inset, then
+   the line to the right edge, where it meets the strip's own divider.
+
+   Applied in BOTH states, not just collapsed: at rest the stack of lines IS the
+   tab count, and expanded they keep the rows legible as discrete tabs. */
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right) .tab-position {
+  background-image: linear-gradient(to right,
+    transparent var(--tf-sep-inset),
+    var(--tf-line-solid) var(--tf-sep-inset));
+  background-repeat: no-repeat;
+  background-position: bottom left;
+  background-size: 100% 1px;
+}
+
+/* ⚠️ ROW HEIGHT IS NOT OURS TO SET. trimfox specifies "compact 22px rows";
+   Vivaldi uses 33 and we cannot follow, which is a genuine place the port
+   diverges rather than a thing left undone.
+
+   Vivaldi's vertical tab list is JS-positioned: each .tab-position carries
+   INLINE `--Height`, `--PositionY`, `--PositionX`, `--Width`, `--ZIndex`.
+   Forcing `--Height: 22px !important` does shrink the rows, but --PositionY is
+   still computed at 33px spacing, so it opens an 11px gap between every tab —
+   measured, not assumed.
+
+   `vivaldi.tabs.bar.height` looks like the lever and is not: it is
+   horizontal-only, and .tab measuring exactly 30px at its default is a
+   coincidence. Setting it to 22 changed nothing in vertical mode (tested).
+
+   So the strip is denser than trimfox's by 11px per row. Living with it beats
+   fighting a layout engine that will win. */
+
+/* Chrome type: small and native, so labels recede rather than compete. */
+#browser.tabs-left #tabs-tabbar-container:is(.left, .right) .tab-header {
+  font-size: var(--tf-font-size);
+  font-family: var(--tf-font-family);
 }
 
 #browser.tabs-left #tabs-tabbar-container:is(.left, .right):not(:hover) .tab-header {

@@ -55,6 +55,7 @@ def recipe(css_dir):
         # The signature: vertical tab strip. Enum — declared as a label on purpose.
         ("vivaldi.tabs.bar.position", "left"),
 
+
         # ── Trim ────────────────────────────────────────────────────────────────
         # Status bar. trimfox has no equivalent; Vivaldi adds one. Enum label.
         ("vivaldi.status_bar.display", "off"),
