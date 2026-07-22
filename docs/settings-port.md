@@ -85,7 +85,23 @@ Not a port — new decisions, because Vivaldi ships UI Firefox has no equivalent
 
       vivaldi.panels.state           {"barVisible": …, "panelVisible": …, "width": 34}
       vivaldi.panels.window_defaults same shape — the defaults for NEW windows.
-                                     Set both, or new windows get the rail back.
+
+  **VERIFIED 2026-07-22 — and it is per-window state, which matters for installs.**
+  On a *fresh* profile, `barVisible: false` works perfectly: `#panels-container`
+  renders at **0px** and the tab strip becomes the leftmost element at `x=0`.
+
+  On an *existing* profile it does NOT change already-existing windows — measured
+  directly, with two windows open simultaneously against the same prefs:
+
+      window 1 (new)       rail 0px   strip x=0    ← inherited window_defaults
+      window 2 (existing)  rail 41px  strip x=41   ← kept its own window state
+
+  So `window_defaults` governs new windows while a live window keeps its own state,
+  and Vivaldi rewrites `panels.state` from the live window on exit. **The installer
+  must say so**: after installing onto an existing profile, the panel bar persists in
+  restored windows until a new window is opened (or it is toggled once by hand). This
+  is the same class of per-window-state behaviour originally *suspected* — wrongly —
+  of `vivaldi.tabs.bar.position`; here it is real, and measured.
 
   Related and worth taking while we are here: `vivaldi.panels.as_overlay.enabled`
   (bool, default `false`) makes panels overlay content instead of pushing it —
