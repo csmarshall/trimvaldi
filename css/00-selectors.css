@@ -38,10 +38,16 @@
        tabs-left    vertical tab bar (vivaldi.tabs.bar.position = 1)
        theme-light  light theme active
        page-loaded  a real, bookmarkable page is open
-       window-blurred  the window does NOT have focus (detected via
-                       document.hasFocus(), deliberately NOT via .isblurred
-                       itself, which would make the check circular)
        never        asserted ABSENT — we learn if Vivaldi starts defining it
+
+   DELIBERATELY NOT REGISTERED: #browser.isblurred (Vivaldi's window-focus
+   class, where trimfox's --tf-*-inactive tokens will eventually hook in). It
+   cannot be verified reliably from inside the UI page: document.hasFocus()
+   goes false when the WEB PAGE takes focus even though the WINDOW is still
+   focused, so it over-reports "blurred" and the check fails spuriously. A
+   check that cries wolf gets ignored, which is worse than no check. Register
+   it when a rule actually uses it, together with a workable way to observe the
+   state — do not register it just because the class exists.
 
    Only lines between the two markers below are parsed, so this format
    documentation does not register itself as an entry.
@@ -50,8 +56,8 @@
    @sel  root              | #browser                                  | always
    @sel  root/dark         | #browser.theme-dark                       | always
    @sel  root/light        | #browser.theme-light                      | theme-light
-   @sel  root/blurred      | #browser.isblurred                        | window-blurred
    @sel  root/tabs-left    | #browser.tabs-left                        | tabs-left
+   @sel  root/unified      | #browser.unified-ui                       | always
    @sel  strip/wrapper     | .tabbar-wrapper                           | always
    @sel  strip/container   | #tabs-tabbar-container                    | always
    @sel  strip/vertical    | #tabs-tabbar-container:is(.left, .right)  | tabs-left
@@ -192,6 +198,29 @@
    practice, and it is why ADR-0002 keeps these in one reviewable file. */
 #browser.mac .toolbar-mainbar.toolbar-addressbar.toolbar-visible {
   min-height: var(--tf-addressbar-height);
+}
+
+
+/* ── The chrome ↔ content boundary ──────────────────────────────────────────
+   Without this the page blends into the chrome and the UI reads as broken on
+   first load — there is nothing telling you where the browser stops and the
+   web page starts. trimfox never needed it stated because Firefox draws the
+   boundary itself; Vivaldi in unified-UI mode deliberately does not:
+
+       .mainbar                     { border: 0 var(--colorBorder); }
+       .unified-ui .mainbar         { border-color: transparent; }
+       .address-top .mainbar:has(…) { border-bottom-width: 1px; }
+
+   So Vivaldi already RESERVES the 1px and then paints it transparent. We only
+   supply the colour, which means this costs no layout shift at all.
+
+   A hairline is also the ethos-correct answer rather than a new device:
+   [ADR-0005] settled that the strip's affordance is "opaque --tf-surface plus a
+   --tf-line-solid hairline edge — no new visual vocabulary, since lines are
+   already trimfox's structural language". Same token as the strip's right edge,
+   so the two boundaries read as one system. */
+#browser.unified-ui #main > .mainbar {
+  border-bottom: 1px solid var(--tf-line-solid);
 }
 
 
